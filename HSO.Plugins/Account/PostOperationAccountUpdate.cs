@@ -1,69 +1,81 @@
-﻿using HSO.Plugins.Helper;
-using Microsoft.Xrm.Sdk;
-using Microsoft.Xrm.Sdk.Query;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.ServiceModel;
-using System.Text;
-using System.Threading.Tasks;
+﻿// <copyright file="PostOperationAccountUpdate.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace HSO.Plugins
 {
+    using System;
+    using System.ServiceModel;
+    using HSO.Plugins.Helper;
+    using Microsoft.Xrm.Sdk;
+    using Microsoft.Xrm.Sdk.Query;
+
+    /// <summary>
+    /// A Postoperation plugin triggers on Account Update.
+    /// </summary>
     public class PostOperationAccountUpdate : PluginBase
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PostOperationAccountUpdate"/> class.
+        /// </summary>
+        /// <param name="unsecure">Unsecured config parameter.</param>
+        /// <param name="secure">Secured config parameter.</param>
         public PostOperationAccountUpdate(string unsecure, string secure)
             : base(typeof(PostOperationAccountUpdate))
         {
-
             // TODO: Implement your custom configuration handling.
+            this.Unsecure = unsecure;
+            this.Secure = secure;
         }
 
         /// <summary>
-        /// Main entry point for he business logic that the plug-in is to execute.
+        /// Gets unsecure Config Param Property.
         /// </summary>
-        /// <param name="localContext">The <see cref="LocalPluginContext"/> which contains the
-        /// <see cref="IPluginExecutionContext"/>,
-        /// <see cref="IOrganizationService"/>
-        /// and <see cref="ITracingService"/>
-        /// </param>
-        /// <remarks>
-        /// </remarks>
+        public string Unsecure { get; }
+
+        /// <summary>
+        /// Gets secure Config Param Property.
+        /// </summary>
+        public string Secure { get; }
+
+        /// <inheritdoc/>
         protected override void ExecuteCdsPlugin(ILocalPluginContext localContext)
         {
             if (localContext == null)
             {
                 throw new InvalidPluginExecutionException(nameof(localContext));
             }
-            
+
             // Obtain the tracing service
             ITracingService tracingService = localContext.TracingService;
 
             try
             {
-                // Obtain the execution context from the service provider.  
+                // Obtain the execution context from the service provider.
                 IPluginExecutionContext context = (IPluginExecutionContext)localContext.PluginExecutionContext;
                 if (context.Stage != 40)
                 {
                     return;
                 }
-                if (context.MessageName.ToLower() != Constants.Update.ToLower())
+
+                if (string.Compare(context.MessageName, Constants.Update, StringComparison.OrdinalIgnoreCase) != 0)
                 {
                     return;
                 }
+
                 if (context.Depth > 1)
                 {
                     return;
                 }
-                
-                // Obtain the organization service reference for web service calls.  
+
+                // Obtain the organization service reference for web service calls.
                 IOrganizationService callingUserService = localContext.CallingUserService;
 
                 // TODO: Implement your custom Plug-in business logic.
                 if (context.InputParameters.Contains(Constants.Target) &&
-                context.InputParameters[Constants.Target] is Entity)
+                    context.InputParameters[Constants.Target] is Entity targetEntity)
                 {
-                    Entity entity = (Entity)context.InputParameters[Constants.Target];
+                    Entity entity = targetEntity;
                     if (entity != null && entity.LogicalName != Account.EntityLogicalName)
                     {
                         return;
@@ -73,43 +85,60 @@ namespace HSO.Plugins
                     {
                         throw new InvalidPluginExecutionException("Plugin is Missing PostImage Registration");
                     }
-                    #region postImageDetails
-                    var postImageEntity = (Entity)context.PostEntityImages["PostImage"];
-                    string acc_address1_line1 = postImageEntity.Attributes.Contains(Account.Fields.Address1_Line1) ? postImageEntity[Account.Fields.Address1_Line1].ToString() : string.Empty;
-                    string acc_address1_line2 = postImageEntity.Attributes.Contains(Account.Fields.Address1_Line2) ? postImageEntity[Account.Fields.Address1_Line2].ToString() : string.Empty;
-                    string acc_address1_line3 = postImageEntity.Attributes.Contains(Account.Fields.Address1_Line3) ? postImageEntity[Account.Fields.Address1_Line3].ToString() : string.Empty;
-                    string acc_address1_city = postImageEntity.Attributes.Contains(Account.Fields.Address1_City) ? postImageEntity[Account.Fields.Address1_City].ToString() : string.Empty;
-                    string acc_address1_postalcode = postImageEntity.Attributes.Contains(Account.Fields.Address1_PostalCode) ? postImageEntity[Account.Fields.Address1_PostalCode].ToString() : string.Empty;
-                    string acc_address1_country = postImageEntity.Attributes.Contains(Account.Fields.Address1_Country) ? postImageEntity[Account.Fields.Address1_Country].ToString() : string.Empty;
-                    #endregion postImageDetails
-                    #region retrive&UpdateAllRelatedContacts
-                    QueryExpression query = new QueryExpression(Contact.EntityLogicalName);
-                    query.ColumnSet = new ColumnSet(Contact.Fields.Address3_Line1, Contact.Fields.Address3_Line2, Contact.Fields.Address3_Line3, Contact.Fields.Address3_City, Contact.Fields.Address3_PostalCode, Contact.Fields.Address3_Country);
-                    query.Criteria = new FilterExpression();
-                    query.Criteria.AddCondition(Contact.Fields.ParentCustomerId, ConditionOperator.Equal, entity.Id);
+
+                    var postImageEntity = (Entity)context.PostEntityImages[Constants.PostImage];
+                    var accAddressLine1 = postImageEntity.GetAttributeValue<string>(Account.Fields.Address1_Line1) ?? string.Empty;
+                    var accAddressLine2 = postImageEntity.GetAttributeValue<string>(Account.Fields.Address1_Line2) ?? string.Empty;
+                    var accAddressLine3 = postImageEntity.GetAttributeValue<string>(Account.Fields.Address1_Line3) ?? string.Empty;
+                    var accAddressCity = postImageEntity.GetAttributeValue<string>(Account.Fields.Address1_City) ?? string.Empty;
+                    var accAddressPostalCode = postImageEntity.GetAttributeValue<string>(Account.Fields.Address1_PostalCode) ?? string.Empty;
+                    var accAddressCountry = postImageEntity.GetAttributeValue<string>(Account.Fields.Address1_Country) ?? string.Empty;
+
+                    var query = new QueryExpression(Contact.EntityLogicalName)
+                    {
+                        ColumnSet = new ColumnSet(
+                            Contact.Fields.Address3_Line1,
+                            Contact.Fields.Address3_Line2,
+                            Contact.Fields.Address3_Line3,
+                            Contact.Fields.Address3_City,
+                            Contact.Fields.Address3_PostalCode,
+                            Contact.Fields.Address3_Country),
+                        Criteria = new FilterExpression()
+                        {
+                            Conditions =
+                        {
+                            new ConditionExpression(Contact.Fields.ParentCustomerId, ConditionOperator.Equal, entity.Id),
+                        },
+                        },
+                    };
+
                     EntityCollection result = callingUserService.RetrieveMultiple(query);
+
                     if (result.Entities.Count > 0)
                     {
                         foreach (var contact in result.Entities)
                         {
-                            Contact updatedContact = new Contact();
-                            updatedContact.Id = contact.Id;
-                            updatedContact.Address3_Line1 = acc_address1_line1;
-                            updatedContact.Address3_Line2 = acc_address1_line2;
-                            updatedContact.Address3_Line3 = acc_address1_line3;
-                            updatedContact.Address3_City = acc_address1_city;
-                            updatedContact.Address3_PostalCode = acc_address1_postalcode;
-                            updatedContact.Address3_Country = acc_address1_country;
+                            var updatedContact = new Contact
+                            {
+                                Id = contact.Id,
+                                Address3_Line1 = accAddressLine1,
+                                Address3_Line2 = accAddressLine2,
+                                Address3_Line3 = accAddressLine3,
+                                Address3_City = accAddressCity,
+                                Address3_PostalCode = accAddressPostalCode,
+                                Address3_Country = accAddressCountry,
+                            };
+
                             callingUserService.Update(updatedContact);
                         }
                     }
-                    #endregion retrive&UpdateAllRelatedContacts
                 }
             }
             catch (FaultException<OrganizationServiceFault> ex)
             {
                 throw new InvalidPluginExecutionException("An error occurred in PostOperationAccountUpdate.", ex);
             }
+
             // Only throw an InvalidPluginExecutionException. Please Refer https://go.microsoft.com/fwlink/?linkid=2153829.
             catch (Exception ex)
             {

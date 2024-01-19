@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsd="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://schemas.microsoft.com/crm/2011/tools/pluginregistration">
+	<xs:element name="Register">
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Solutions" />
+				<xs:element name="XamlWorkflows" />
+				<xs:element name="DataProviders" />
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xsd:schema>

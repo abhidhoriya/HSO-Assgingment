@@ -3,12 +3,12 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("HSO.UnitTests")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("HSO.UnitTest")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("HSO")]
 [assembly: AssemblyProduct("HSO.UnitTests")]
 [assembly: AssemblyCopyright("Copyright ©  2024")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyTrademark("TM")]
 [assembly: AssemblyCulture("")]
 
 [assembly: ComVisible(false)]

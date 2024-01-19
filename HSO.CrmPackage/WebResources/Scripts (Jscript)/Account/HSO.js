@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 var HSO = HSO || { namespace: true };
 HSO.Account = HSO.Account || { namespace: true };
 HSO.Account.Fields = {
@@ -8,13 +8,13 @@ HSO.Account.Fields = {
 HSO.Account.Constants = {
     IBANApiKey: "820d953419e4c3bf9f84c753310ca480b2815fed",
 };
-HSO.Account.onLoad = function (executionContext) {
+HSO.Account.onLoad = function(executionContext) {
     "use strict";
 };
-HSO.Account.onFieldChange = function (executionContext) {
+HSO.Account.onFieldChange = function(executionContext) {
     "use strict";
 };
-HSO.Account.onSave = function (executionContext) {
+HSO.Account.onSave = function(executionContext) {
     "use strict";
     try {
         var formContext = executionContext.getFormContext();
@@ -23,7 +23,7 @@ HSO.Account.onSave = function (executionContext) {
             var bankNumber = formContext.getAttribute(HSO.Account.Fields.BankNumber) === null ? null : formContext.getAttribute(HSO.Account.Fields.BankNumber).getValue();
             debugger;
             var ibanApi = IBANApi();
-            ibanApi.validateIBANBasic(bankNumber, HSO.Account.Constants.IBANApiKey).then(function (jsonoutputdata) {
+            ibanApi.validateIBANBasic(bankNumber, HSO.Account.Constants.IBANApiKey).then(function(jsonoutputdata) {
                 debugger;
                 if (jsonoutputdata.result != 200) {
                     console.log(jsonoutputdata);
@@ -41,4 +41,5 @@ HSO.Account.onSave = function (executionContext) {
     catch (error) {
         Xrm.Navigation.openAlertDialog({ text: "" + error.message });
     }
+
 };
